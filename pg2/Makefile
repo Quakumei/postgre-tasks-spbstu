@@ -9,12 +9,20 @@ HOST=localhost
 # ====================
 # Backup configuration
 # ====================
-BACKUP_DIR=./backups
+BACKUP_DIR=../backups
 DATE=$(shell date +"%Y%m%d%H%M")
 OUTPUT_BACKUP := /tmp/backup.sql
 BACKUP_FILENAME=${BACKUP_DIR}/backup_${DATABASE_NAME}_${DATE}.sql
 NUM_BACKUPS := 10
 ${BACKUP_DIR}:
+	mkdir $@
+
+# ====================
+# Running queries
+# ====================
+QUERIES_DIR=./queries
+
+${QUERIES_DIR}:
 	mkdir $@
 
 # ====================
@@ -31,6 +39,7 @@ backup_clean: ${BACKUP_DIR}
 	rm -rf ${BACKUP_DIR}
 
 backup_restore: ${BACKUP_DIR}
+	# Don't forget that {DATABASE_NAME} should be created before restoration
 	@echo "Checking for available backups..."
 	@BACKUPS=$$(ls -t $(BACKUP_DIR)/*.gz 2>/dev/null | head -n $(NUM_BACKUPS)); \
 	if [ -z "$$BACKUPS" ]; then \
@@ -49,4 +58,31 @@ backup_restore: ${BACKUP_DIR}
 			psql -h ${HOST} -U ${USER} -d ${DATABASE_NAME} -f $(OUTPUT_BACKUP); \
 		fi; \
 	fi
-	# Don't forget that {DATABASE_NAME} should be created before restoration
+
+run_queries: ${QUERIES_DIR}
+	read -p "Please provide password for interaction with db (leave empty to output scripts):" PASS;
+	@for file in $(wildcard ${QUERIES_DIR}/*.sql); do \
+		if [ -f "$$file" ]; then \
+			bat $$file; \
+			if [ -n "$$PASS" ]; then \
+			read -p "Run this SQL script? [y/n] (default: n): " CHOICE; \
+			if [ "$$CHOICE" = "y" ]; then \
+				echo "Running $$file..."; \
+				echo $$PASS | psql -h ${HOST} -U ${USER} -d ${DATABASE_NAME} -f $$file; \
+			else \
+				echo "Skipping file: $$file"; \
+			fi \
+			fi \
+		fi \
+	done
+
+list_queries: ${QUERIES_DIR}
+	echo "" | make run_queries
+
+
+
+
+
+
+
+
