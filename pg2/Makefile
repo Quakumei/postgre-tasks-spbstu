@@ -80,9 +80,21 @@ list_queries: ${QUERIES_DIR}
 	echo "" | make run_queries
 
 
+# ====================
+# Formatting queries 
+# ====================
+# Define the directory containing the .sql files
 
 
+# Recursively find all .sql files in the directory and its subdirectories
+SQL_FILES := $(shell find $(QUERIES_DIR) -type f -name '*.sql')
 
+# Define the target for formatting
+.PHONY: format_queries $(SQL_FILES)
+format_queries: $(SQL_FILES)
 
+# Rule for formatting each .sql file in-place
+$(SQL_FILES):
+	pg_format $@ -i
 
 
