@@ -60,24 +60,21 @@ backup_restore: ${BACKUP_DIR}
 	fi
 
 run_queries: ${QUERIES_DIR}
-	read -p "Please provide password for interaction with db (leave empty to output scripts):" PASS;
 	@for file in $(wildcard ${QUERIES_DIR}/*.sql); do \
 		if [ -f "$$file" ]; then \
-			bat $$file; \
-			if [ -n "$$PASS" ]; then \
-			read -p "Run this SQL script? [y/n] (default: n): " CHOICE; \
-			if [ "$$CHOICE" = "y" ]; then \
-				echo "Running $$file..."; \
-				echo $$PASS | psql -h ${HOST} -U ${USER} -d ${DATABASE_NAME} -f $$file; \
-			else \
-				echo "Skipping file: $$file"; \
-			fi \
-			fi \
+			bat -f $$file; \
+				read -p "Run this SQL script? [y/n] (default: n): " CHOICE; \
+				if [ "$$CHOICE" = "y" ]; then \
+					echo "Running $$file..."; \
+					psql -h ${HOST} -U ${USER} -d ${DATABASE_NAME} -f $$file; \
+				else \
+					echo "Skipping file: $$file"; \
+				fi \
 		fi \
 	done
 
 list_queries: ${QUERIES_DIR}
-	echo "" | make run_queries
+	echo "" | make run_queries | less -R
 
 
 # ====================
