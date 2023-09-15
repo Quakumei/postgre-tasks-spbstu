@@ -29,7 +29,6 @@ CREATE VIEW last_year_masters_earnings AS (
 ORDER BY
     total_earned DESC);
 
-
 -- Testing
 SELECT
     *
