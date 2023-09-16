@@ -93,6 +93,20 @@ services:
     ports:
       - 8008:8000
     restart: on-failure
+    networks:
+      - postgres
+
+  car_service-prometheus:
+    container_name: car_service-prometheus
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./logs/prometheus-data:/prometheus
+    restart: unless-stopped 
+    networks:
+      - postgres
+    ports:
+      - 9090:9090
 
         #  postgres_exporter:
 #    container_name: pgdb-test-metrics_exporter
