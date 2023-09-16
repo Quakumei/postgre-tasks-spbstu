@@ -1,8 +1,8 @@
 version: "3.9"
 services:
-  postgres:
+  car_service-postgres:
     image: postgres:14.8-alpine3.18
-    container_name: pgdb-test
+    container_name: car_service-postgres
     command:
       - "postgres"
       - "-c"
@@ -60,8 +60,8 @@ services:
     networks:
       - postgres
 
-  pgadmin:
-    container_name: pgdb-test-pgadmin
+  car_service-pgadmin:
+    container_name: car_service-pgadmin
     image: dpage/pgadmin4:7.2
     environment:
       PGADMIN_DEFAULT_EMAIL: "tampio@nico.ni"
@@ -79,8 +79,22 @@ services:
           memory: 1G
     networks:
       - postgres
+  
 
-#  postgres_exporter:
+  car_service-backend:
+    container_name: car_service-backend 
+    build: ./car_service_backend
+    working_dir: /code/app
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    environment:
+      DEBUG: 1
+    volumes:
+      - ./car_service_backend/app:/code/app
+    ports:
+      - 8008:8000
+    restart: on-failure
+
+        #  postgres_exporter:
 #    container_name: pgdb-test-metrics_exporter
 #    image: prometheuscommunity/postgres-exporter:v0.10.1
 #    environment:
