@@ -12,8 +12,10 @@ docker-compose up -d
 
 ## Roadmap
 
-- [ ] FastAPI service scratch
-- [ ] Set up docker-compose for FastAPI
+- [x] FastAPI service scratch
+- [x] Set up docker-compose for FastAPI
+- [ ] Set up log collection via prometheus
+- [ ] Set up log visualisation via grafana
 - [ ] UI service scratch
 - [ ] Set up docker-compose for UI
 - [ ] Fix docker-compose so postgres uses configuration from file
