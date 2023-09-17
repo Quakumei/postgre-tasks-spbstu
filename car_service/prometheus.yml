@@ -14,3 +14,7 @@ scrape_configs:
     static_configs:
       - targets: ['car_service-backend:8000']
 
+  - job_name: 'car_service-cadvisor'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['car_service-cadvisor:8080']

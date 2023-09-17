@@ -119,6 +119,27 @@ services:
     volumes:
       - ./logs/grafana:/var/lib/grafana
 
+
+  car_service-cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: car_service-cadvisor
+    privileged: true
+    ports:
+    - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    devices:
+      - /dev/kmsg
+    networks:
+      - postgres
+      #  depends_on:
+      # - ["car_service-grafana", "car_service-prometheus", "car_service-backend", "car_service-pgadmin"]
+      # car_service-frontend
+      
 #  postgres_exporter:
 #    container_name: pgdb-test-metrics_exporter
 #    image: prometheuscommunity/postgres-exporter:v0.10.1
