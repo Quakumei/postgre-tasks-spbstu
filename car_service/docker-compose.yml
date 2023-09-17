@@ -103,12 +103,23 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./logs/prometheus-data:/prometheus
     restart: unless-stopped 
-    networks:
-      - postgres
     ports:
       - 9090:9090
+    networks:
+      - postgres
+  
+  car_service-grafana:
+    container_name: car_service-grafana
+    image: grafana/grafana-enterprise
+    ports:
+      - 3000:3000
+    networks:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - ./logs/grafana:/var/lib/grafana
 
-        #  postgres_exporter:
+#  postgres_exporter:
 #    container_name: pgdb-test-metrics_exporter
 #    image: prometheuscommunity/postgres-exporter:v0.10.1
 #    environment:

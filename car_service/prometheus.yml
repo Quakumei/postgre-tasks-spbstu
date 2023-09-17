@@ -8,9 +8,9 @@ scrape_configs:
   - job_name: 'car_service-prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['car_service-prometheus:9090']
+
   - job_name: 'car_service-backend'
     static_configs:
-      - targets: ['car_service-backend']
-
+      - targets: ['car_service-backend:8000']
 

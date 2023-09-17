@@ -161,4 +161,6 @@ cython_debug/
 
 # Custom
 logs/prometheus-data/*
+logs/grafana/*
 !logs/prometheus-data/.gitkeep
+!logs/grafana/.gitkeep
