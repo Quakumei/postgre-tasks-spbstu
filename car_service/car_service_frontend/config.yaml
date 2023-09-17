@@ -1,0 +1,17 @@
+credentials:
+  usernames:
+    sysadmin: # Notice that login is this line
+      email: quakumei@gmail.com
+      name: Ilya Tampio 
+      password: $2b$12$ByiI4veq94h3lRJwR61wpORJPmlosVb5FjmJvjgaUeZC83drqsl2q
+    operator_hopkins_bob: # Sample operator
+      email: hopkins.bob@gmail.com 
+      name: Bob Hopkins
+      password: $2b$12$.HIkx0MDkIGhfG7dIXdYFeQP1wlUO85Tdouuf3KWVElKd6uuJeN2u 
+cookie:
+  expiry_days: 7
+  key: "dfhkgjhdfkjghjdkhlakjsdhlfkjwhqwuqh" # Must be string
+  name: car_service_authenticate
+preauthorized:
+  emails:
+  - melsby@gmail.com
