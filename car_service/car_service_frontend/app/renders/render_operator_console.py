@@ -10,6 +10,6 @@ def render_operator_console():
     st.markdown("## Stats")
     d = st.date_input("Period", value=[(datetime.datetime.now() - datetime.timedelta(days=365)), datetime.datetime.now()], format='YYYY-MM-DD')
     if d and len(d) == 2:
-        st.markdown(f"### Best 5 masters (by quantity of works) [{d[0]} -- {d[1]}]")
+        st.markdown(f"### Best 5 masters (based on quantity)")
         best_workers = conn.query(f"SELECT masters.id as master_id, masters.name as master_name, COUNT(1) as works_count FROM works LEFT JOIN masters ON works.master_id = masters.id WHERE works.date_work >= '{d[0]}' AND works.date_work <= '{d[1]}' GROUP BY masters.id ORDER BY COUNT(1) DESC LIMIT 5")
         st.dataframe(best_workers)

@@ -99,6 +99,7 @@ services:
   car_service-prometheus:
     container_name: car_service-prometheus
     image: prom/prometheus
+    user: "0"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./logs/prometheus-data:/prometheus
@@ -111,6 +112,7 @@ services:
   car_service-grafana:
     container_name: car_service-grafana
     image: grafana/grafana-enterprise
+    user: "0"
     ports:
       - 3000:3000
     networks:
@@ -139,7 +141,22 @@ services:
       #  depends_on:
       # - ["car_service-grafana", "car_service-prometheus", "car_service-backend", "car_service-pgadmin"]
       # car_service-frontend
-      
+
+  car_service-frontend:
+    container_name: car_service-frontend
+    build: ./car_service_frontend
+    working_dir: /code
+    command: streamlit run app/Home.py --server.port=8501 --server.address=0.0.0.0  
+    volumes:
+      - ./car_service_frontend:/code
+      - ./car_service_frontend/secrets.toml:/code/.streamlit/secrets.toml
+      - ./car_service_frontend/config.yaml:/code/config.yaml
+    ports:
+      - 8501:8501 
+    restart: on-failure
+    networks:
+      - postgres
+
 #  postgres_exporter:
 #    container_name: pgdb-test-metrics_exporter
 #    image: prometheuscommunity/postgres-exporter:v0.10.1
