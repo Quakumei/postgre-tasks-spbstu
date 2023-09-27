@@ -81,20 +81,20 @@ services:
       - postgres
   
 
-  car_service-backend:
-    container_name: car_service-backend 
-    build: ./car_service_backend
-    working_dir: /code/app
-    command: uvicorn main:app --host 0.0.0.0 --reload
-    environment:
-      DEBUG: 1
-    volumes:
-      - ./car_service_backend/app:/code/app
-    ports:
-      - 8008:8000
-    restart: on-failure
-    networks:
-      - postgres
+        # car_service-backend:
+        #   container_name: car_service-backend 
+        #   build: ./car_service_backend
+        #   working_dir: /code/app
+        #   command: uvicorn main:app --host 0.0.0.0 --reload
+        #   environment:
+        #     DEBUG: 1
+        #   volumes:
+        #     - ./car_service_backend/app:/code/app
+        #   ports:
+        #     - 8008:8000
+        #   restart: on-failure
+        #   networks:
+        #     - postgres
 
   car_service-prometheus:
     container_name: car_service-prometheus

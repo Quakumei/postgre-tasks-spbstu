@@ -1,7 +1,8 @@
 streamlit
 streamlit-authenticator
-SQLAlchemy==1.4
+SQLAlchemy
 psycopg2-binary
 altair
 streamlit-aggrid==0.3.4
 streamlit-modal==0.1.0
+tomli
