@@ -1,7 +1,12 @@
 import datetime 
+import os 
+import tempfile
 
 import streamlit as st
 import altair as alt
+import pandas as pd
+from docx import Document
+from docx.shared import Inches
 
 def foreign_domestic_cars_service_cost(conn):
     st.markdown("## Общая стоимость обслуживания отечественных и импортных автомобилей")
@@ -38,11 +43,13 @@ def foreign_domestic_cars_service_cost(conn):
         # c = c.configure_title(fontSize=20, anchor='middle')
         st.altair_chart(c, use_container_width=True)
         st.dataframe(total_service_cost)
+        return c, total_service_cost
     else:
         st.markdown("Ожидается ввод периода...")
+        return None
 
 
-def best_monthly_workers(conn) -> None:
+def best_monthly_workers(conn):
     date = st.date_input("Выберите месяц работы мастеров", max_value=datetime.datetime.now(), format="YYYY-MM-DD")
     if date:
         d = date.replace(day=1), (date.replace(day=1)+datetime.timedelta(days=30))
@@ -52,10 +59,68 @@ def best_monthly_workers(conn) -> None:
         c = c.mark_bar() + c.mark_text(align='left', dx=2)
         st.altair_chart(c, use_container_width=True)
         st.dataframe(best_workers)
+        return c, best_workers
     else:
         st.markdown("Ожидается ввод месяца...")
+        return None
+
+
+def add_dataframe(df: pd.DataFrame, document) -> None:
+    t = document.add_table(rows=df.shape[0]+1, cols=df.shape[1])
+    for j in range(df.shape[-1]):
+        t.cell(0,j).text = df.columns[j]
+    for i in range(df.shape[0]):
+        for j in range(df.shape[-1]):
+            t.cell(i+1,j).text = str(df.values[i,j])
+
+def generate_report_docx(service_cost_data, best_workers_data):
+    """Produces docx report and return the object"""
+    document = Document()
+
+    # 1. Extract fetched data
+    sc_chart, sc_df = service_cost_data
+    bw_chart, bw_df = best_workers_data
+    
+    doc = b''
+    # 2. Save artefacts to tempdir 
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sc_chart_path = os.path.join(tmpdir, "sc_chart.png")
+        sc_chart.save(sc_chart_path)
+        bw_chart_path = os.path.join(tmpdir, "bw_chart.png")
+        bw_chart.save(bw_chart_path)
+
+        document.add_heading(f'Отчёт о работе от {datetime.datetime.now().strftime("%Y-%m-%d")}', 0)
+        p = document.add_paragraph('Здесь приведена информация о работе сервиса. Если график пустой - то и информации нет')
+        
+        if sc_df.shape[0] != 0:
+            document.add_heading('Общая стоимость обслуживания отечественных и импортных автомобилей', level=1)
+            document.add_picture(sc_chart_path, width=Inches(7))
+            add_dataframe(sc_df, document)
+
+        if bw_df.shape[0] != 0:
+            document.add_heading('Топ 5 мастеров по кол-ву работ', level=1)
+            document.add_picture(bw_chart_path, width=Inches(7)) 
+            add_dataframe(bw_df, document)
+        
+        document_path = os.path.join(tmpdir, "report.docx")
+        document.save(document_path)
+        with open(document_path, "rb") as report_fb:
+            doc = report_fb.read()
+    return doc
+
+def create_report(service_cost_data, best_workers_data):
+    """Generates report and gives user the pdf file"""
+    doc = generate_report_docx(service_cost_data, best_workers_data) 
+    return doc 
 
 def render_reports() -> None:
     conn = st.experimental_connection("car_service_db")
-    foreign_domestic_cars_service_cost(conn)
-    best_monthly_workers(conn)
+    service_cost_data = foreign_domestic_cars_service_cost(conn)
+    best_workers_data = best_monthly_workers(conn)
+    if None not in (service_cost_data, best_workers_data):
+        if st.button(label='Создать отчёт', key='download-report-btn'):
+            report = create_report(service_cost_data, best_workers_data)
+            st.markdown("**Отчет готов!**")
+            st.download_button('Скачать отчёт', report, file_name=f'{datetime.datetime.now()}_car_service_report.docx')
+
+

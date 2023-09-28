@@ -3,6 +3,8 @@ streamlit-authenticator
 SQLAlchemy
 psycopg2-binary
 altair
+vl-convert-python
 streamlit-aggrid==0.3.4
 streamlit-modal==0.1.0
 tomli
+python-docx
