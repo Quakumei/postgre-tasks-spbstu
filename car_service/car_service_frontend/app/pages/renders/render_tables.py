@@ -1,7 +1,9 @@
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 import streamlit as st
 from st_aggrid import AgGrid
+from streamlit_modal import Modal
 
 import tomli
 from sqlalchemy import create_engine 
@@ -12,41 +14,32 @@ def read_connection_string(secrets_toml: str = "secrets.toml", db_name: str = "c
         data = tomli.load(f)
     return data["connections"][db_name]["url"]
 
-
 engine = create_engine(read_connection_string(), echo=False)
 
-def submit_changes(old_df: pd.DataFrame, edited_df: pd.DataFrame, table_name:str):
-    """Appends changes to the db"""
-    assert False, "DB changes are WIP"
-    # 1. Remove removed rows
-    ids_to_remove = [id for id in old_df.id if id not in edited_df and not id is None]
-    ids_remove_query = f"DELETE FROM {table_name} WHERE id IN ({', '.join(map(str, ids_to_remove))})"
-    result = engine.execute(ids_remove_query)
+def show_modal(modal, df_change: pd.DataFrame, table_name): 
+    with modal.container():
+        st.markdown(f"{df_change=}")
 
-    # 2. Append new rows
-    ids_to_add = [id for id in edited_df if id not in old_df and not id is None]
-    for new_row in edited_df.loc[df.id.isin(ids_to_add)]:
-        add_row_query = f"INSERT INTO {table_name} ({', '.join(map(str, old.df.columns))}) VALUES ({', '.join(map(str, new_row))}"
-        result = engine.execute(add_row_query)
 
-    # 3. Modify edited rows
-    modified_result = old_df.merge(edited_df, on='id', suffixes=('_df1', '_df2'))
-    new_df = pd.DataFrame()
-    for column in edited_df.columns:
-        if column.endswith('_df2'):
-            new_df[column.replace('_df2', '')] =  modfied_result[column]
-     
-
+def apply_modifications(engine, table_name: str, change_df: pd.DataFrame):
+    """Apply modifications made in df"""
+    assert change_df.shape[0] == 0
 
 
 def render_table_default(engine, table_name: str):
     with st.expander(table_name.capitalize()):
-        with st.form(f'edit-form-{table_name}'):
-            df = pd.read_sql(table_name, con=engine)
-            # st.dataframe(df)
-            edited_df = st.data_editor(df, num_rows='dynamic', disabled=['id',])
-            # st.markdown(f"Your change is {edited_df}")
-            st.form_submit_button('Submit changes', on_click=lambda: submit_changes(df, edited_df, table_name))
+        st.markdown("Для редактирования таблицы, нажмите дважды на ее ячейку")
+        df = pd.read_sql(table_name, con=engine)
+        edited_df = st.data_editor(
+            df.copy(), 
+            hide_index=True, 
+            disabled=['id',]
+        )
+        df_change = edited_df[~edited_df.isin(df).all(axis=1)]
+        if df_change.shape[0] != 0:
+            st.markdown(f"*Изменения в {df_change.shape[0]} строчках...*")
+            st.dataframe(df_change, hide_index=True)
+        st.button("Применить изменения",key=f'apply-{table_name}', on_click=apply_modifications, args=(engine, table_name, df_change), disabled=df_change.shape[0]==0)
 
 
 TABLES = {"masters", "cars", "services"}
