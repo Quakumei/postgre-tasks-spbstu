@@ -9,5 +9,5 @@ st.title("Отчёты")
 if is_authorized:
     render_reports()
 else:
-    print(f"{is_authorized=}")
+    st.markdown("Пожалуйста, авторизируйтесь прежде чем использовать приложение")
 
