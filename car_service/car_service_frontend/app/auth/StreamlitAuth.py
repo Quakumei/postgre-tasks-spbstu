@@ -33,8 +33,10 @@ def login_if_not_authorized(display_login: tp.Literal['main', 'sidebar'] = 'main
     authenticator = init_authenticator_from_yaml() 
     name, authentication_status, username = authenticator.login('Логин', display_login)
     if authentication_status == True: 
-        authenticator.logout('Выйти из профиля', 'main')
-        st.write(f'Вы авторизованы как *{name}* (уровень доступа: {get_access_level(username)})')
+        with st.expander("Профиль"):
+            st.write(f'Вы авторизованы как *{name}* (уровень доступа: {get_access_level(username)})')
+            authenticator.logout('Выйти из профиля', 'main')
+        st.markdown('---')
     elif authentication_status == False:
         st.error('Имя пользователя или пароль неверны')
     elif authentication_status == None:
