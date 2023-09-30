@@ -36,17 +36,19 @@ def foreign_domestic_cars_service_cost(conn):
         ORDER BY
             service_cost DESC;
         """ 
-        with st.expander("SQL"):
+        if st.checkbox("Использовать хранимую функцию", key='service-cost-sql-funciton-checkbox'):
+            total_service_cost_query = f"""SELECT * from service_cost_by_foreignness('{date[0]}','{date[1]}')"""
+        with st.expander("Исполняемый SQL"):
             st.code(total_service_cost_query, "sql")
         total_service_cost = conn.query(total_service_cost_query)
         c = alt.Chart(total_service_cost).mark_arc(outerRadius=80).encode(theta=alt.Theta("service_cost:Q").stack(True), color=alt.Color("is_foreign:N").legend(None))
-        text = c.mark_text(radius=125, size=20).encode(text=alt.condition(alt.datum.is_foreign, alt.value("Импортные"), alt.value("Отечественные")))
+        text = c.mark_text(radius=125, size=20).encode(text=alt.condition(alt.datum.is_foreign, alt.value("Импорт"), alt.value("Отечеств.")))
         text_val = c.mark_text(radius=100, size=20).encode(text="service_cost:Q")
         c = c + text + text_val
         c = c.properties(title=f'Стоимость обслуживания по "импортности" автомобилей [{date[0]} - {date[1]}] (в RUB)')
         # c = c.configure_title(fontSize=20, anchor='middle')
         st.altair_chart(c, use_container_width=True)
-        st.dataframe(total_service_cost)
+        st.dataframe(total_service_cost, hide_index=True)
         return c, total_service_cost
     else:
         st.markdown("Ожидается ввод периода...")
@@ -71,9 +73,11 @@ def best_monthly_workers(conn):
         ORDER BY 
             COUNT(1) DESC 
         LIMIT 5;"""
+        if st.checkbox("Использовать хранимую функцию"):
+            query = f"""SELECT * from top_five_masters('{d[0]}','{d[1]}')"""
         best_workers = conn.query(query)
         best_workers = best_workers.set_index('master_id').sort_values(by=['works_count',], ascending=False)
-        with st.expander("SQL"):
+        with st.expander("Исполняемый SQL"):
             st.code(query, "sql")
         c = alt.Chart(best_workers).encode(x=alt.X('works_count', title='Кол-во выполненных работ за период'), y=alt.Y('master_name', title=['Имя мастера']), text='works_count').properties(title=f"Топ 5 мастеров по кол-ву работ [{d[0]} - {d[1]}]")
         c = c.mark_bar() + c.mark_text(align='left', dx=2)
