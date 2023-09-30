@@ -14,4 +14,3 @@ if is_authorized:
     st.info("Используйте элементы сайдбара для навигации по приложению")
 st.markdown("---")
 render_about()
-

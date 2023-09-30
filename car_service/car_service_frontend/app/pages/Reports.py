@@ -10,4 +10,3 @@ if is_authorized:
     render_reports()
 else:
     st.markdown("Пожалуйста, авторизируйтесь прежде чем использовать приложение")
-

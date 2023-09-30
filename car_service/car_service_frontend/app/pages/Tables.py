@@ -7,7 +7,7 @@ is_authorized = login_if_not_authorized()
 st.title("Справочники")
 
 if is_authorized:
-    if get_access_level(st.session_state['username']) != 'admin':
+    if get_access_level(st.session_state["username"]) != "admin":
         st.warning("У вас недостаточно прав, чтобы просматривать эту страницу")
     else:
         render_tables()
