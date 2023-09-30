@@ -10,7 +10,7 @@ DEFAULT_CONFIG_FILE = 'config.yaml'
 def init_authenticator_from_yaml(yaml_config: str = DEFAULT_CONFIG_FILE) -> stauth.Authenticate:
     """ Init Streamlit authenticator from yaml config file """
 
-    with open('config.yaml') as file:
+    with open(yaml_config) as file:
         config = yaml.load(file, Loader=SafeLoader)
     authenticator = stauth.Authenticate(
         config['credentials'],
@@ -21,6 +21,11 @@ def init_authenticator_from_yaml(yaml_config: str = DEFAULT_CONFIG_FILE) -> stau
     )
     return authenticator
 
+def get_access_level(user_name, yaml_config: str = DEFAULT_CONFIG_FILE) -> str:
+    with open(yaml_config) as file:
+        config = yaml.load(file, Loader=SafeLoader)
+        return config['credentials']['usernames'][user_name]['level']
+
 def login_if_not_authorized(display_login: tp.Literal['main', 'sidebar'] = 'main') -> bool: 
     """ Tries to authorize user if not authorized.
     Returns whether authorization was successful.
@@ -29,7 +34,7 @@ def login_if_not_authorized(display_login: tp.Literal['main', 'sidebar'] = 'main
     name, authentication_status, username = authenticator.login('Логин', display_login)
     if authentication_status == True: 
         authenticator.logout('Выйти из профиля', 'main')
-        st.write(f'Вы авторизованы как *{name}*')
+        st.write(f'Вы авторизованы как *{name}* (уровень доступа: {get_access_level(username)})')
     elif authentication_status == False:
         st.error('Имя пользователя или пароль неверны')
     elif authentication_status == None:
