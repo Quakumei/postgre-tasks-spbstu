@@ -33,9 +33,13 @@ def add_work(engine, work):
     cols = ', '.join(work.columns)
     values = ', '.join([f"'{k}'" for k in work.iloc[0]])
     query = f"INSERT INTO works ({cols}) VALUES ({values})"
-    with engine.connect() as conn:
-        result = conn.execute(text(query))
-        conn.commit()
+    st.warning(query)
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(query))
+            conn.commit()
+    except Exception as e:
+        st.exception(e)
 
 def get_last_month_master_works(engine, master_id):
     query = f"SELECT works.id as work_id, works.date_work as date_work, services.name as service_name, services.id as service_id, cars.num as car_num, cars.color as car_color, cars.id as car_id FROM works  LEFT JOIN cars ON cars.id = works.car_id LEFT JOIN services ON services.id = works.service_id WHERE works.master_id = {master_id} AND works.date_work > NOW() - interval '30 day'"

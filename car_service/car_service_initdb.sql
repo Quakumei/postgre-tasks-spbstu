@@ -99,6 +99,42 @@ COPY public.works (id, date_work, master_id, car_id, service_id) FROM stdin;
 4	2023-01-27	1	3	2
 \.
 
+
+--
+-- Name: cars_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tampio
+--
+
+SELECT pg_catalog.setval('public.cars_id_seq', 5, true);
+
+
+--
+-- Name: masters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tampio
+--
+
+SELECT pg_catalog.setval('public.masters_id_seq', 5, true);
+
+
+--
+-- Name: services_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tampio
+--
+
+SELECT pg_catalog.setval('public.services_id_seq', 3, true);
+
+
+--
+-- Name: works_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tampio
+--
+
+SELECT pg_catalog.setval('public.works_id_seq', 4, true);
+
+
+--
+-- Name: cars cars_pkey; Type: CONSTRAINT; Schema: public; Owner: tampio
+--
+
+
+
+
 --
 -- Хранимая процедура
 --
@@ -146,4 +182,72 @@ ORDER BY
 LIMIT 5;
 END;
 $$ LANGUAGE plpgsql;
+
+--
+-- TRIGGERS
+--
+
+-- Unique car nums
+
+CREATE OR REPLACE FUNCTION enforce_unique_cars_num ()
+    RETURNS TRIGGER
+    AS $$
+BEGIN
+    IF EXISTS (
+        SELECT
+            1
+        FROM
+            cars
+        WHERE
+            num = NEW.num) THEN
+    RAISE EXCEPTION 'Duplicate value detected for num: %', NEW.num;
+END IF;
+    RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER unique_num_insert_trigger
+    BEFORE INSERT ON cars
+    FOR EACH ROW
+    EXECUTE FUNCTION enforce_unique_cars_num ();
+
+
+-- 10 Masters maximum
+
+CREATE OR REPLACE FUNCTION enforce_ten_masters_cap()
+    RETURNS TRIGGER
+    AS $$
+BEGIN
+    IF ((SELECT COUNT(*) FROM masters) > 9) 
+        THEN
+    RAISE EXCEPTION 'Masters count is 10 or more, denying addition of new: master name %', NEW.name;
+END IF;
+    RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER ten_masters_cap
+    BEFORE INSERT ON masters
+    FOR EACH ROW
+    EXECUTE FUNCTION enforce_ten_masters_cap ();
+
+-- Prohibition of addition a new work if already has two or more.
+
+CREATE OR REPLACE FUNCTION prevent_duplicate_works()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM works WHERE date_work = NEW.date_work AND master_id = NEW.master_id) >= 2 THEN
+        RAISE EXCEPTION 'Cannot add entry. Date_work already has more than two entries with the same master_id.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_duplicate_works_trigger
+BEFORE INSERT ON works
+FOR EACH ROW
+EXECUTE FUNCTION prevent_duplicate_works();
+
 

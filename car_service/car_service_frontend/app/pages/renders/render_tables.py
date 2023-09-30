@@ -90,7 +90,7 @@ def render_table_default(engine, table_name: str):
                 add_button = st.button("Добавить запись", key=f'add-{table_name}', on_click=add_entry, args=(engine, table_name, row_entry), disabled=df_change.shape[0]!=0 and not remove_button)
                 st.markdown("---")
             st.markdown("**Удалить**")
-            remove_button_idx = st.selectbox(label="Id записи", options=sorted(list(df.index.values)), disabled=df_change.shape[0]!=0 )
+            remove_button_idx = st.selectbox(label="Id записи", key=f'remove-id-selector-{table_name}', options=sorted(list(df.index.values)), disabled=df_change.shape[0]!=0 )
             remove_button = st.button("Удалить запись", key=f'remove-{table_name}', on_click=remove_entry, args=(engine, remove_button_idx, table_name), disabled=df_change.shape[0]!=0 and remove_button_idx is not None)
         def reset():
             st.session_state.key += 1
