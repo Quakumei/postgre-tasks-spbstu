@@ -26,13 +26,13 @@ def login_if_not_authorized(display_login: tp.Literal['main', 'sidebar'] = 'main
     Returns whether authorization was successful.
     """ 
     authenticator = init_authenticator_from_yaml() 
-    name, authentication_status, username = authenticator.login('Login', display_login)
+    name, authentication_status, username = authenticator.login('Логин', display_login)
     if authentication_status == True: 
-        authenticator.logout('Logout', 'main')
-        st.write(f'Authorized as *{name}*')
+        authenticator.logout('Выйти из профиля', 'main')
+        st.write(f'Вы авторизованы как *{name}*')
     elif authentication_status == False:
-        st.error('Username/password is incorrect')
+        st.error('Имя пользователя или пароль неверны')
     elif authentication_status == None:
-        st.warning('Please enter your username and password')
+        st.warning('Пожалуйста, введите имя пользователя и пароль')
     return authentication_status if authentication_status is not None else False
     

@@ -84,10 +84,11 @@ def render_table_default(engine, table_name: str):
                 st.dataframe(df_change, hide_index=False)
             st.button("Применить изменения",key=f'apply-{table_name}', on_click=apply_modifications, args=(engine, table_name, df_change), disabled=df_change.shape[0]==0)
         with col2:
-            st.markdown("**Добавить**")
-            row_entry = st.data_editor(pd.DataFrame([len(df.columns)*[None],],columns=df.columns), hide_index=True, disabled=['id',])
-            add_button = st.button("Добавить запись", key=f'add-{table_name}', on_click=add_entry, args=(engine, table_name, row_entry), disabled=df_change.shape[0]!=0 and not remove_button)
-            st.markdown("---")
+            if table_name != "works":
+                st.markdown("**Добавить**")
+                row_entry = st.data_editor(pd.DataFrame([len(df.columns)*[None],],columns=df.columns), hide_index=True, disabled=['id',])
+                add_button = st.button("Добавить запись", key=f'add-{table_name}', on_click=add_entry, args=(engine, table_name, row_entry), disabled=df_change.shape[0]!=0 and not remove_button)
+                st.markdown("---")
             st.markdown("**Удалить**")
             remove_button_idx = st.selectbox(label="Id записи", options=sorted(list(df.index.values)), disabled=df_change.shape[0]!=0 )
             remove_button = st.button("Удалить запись", key=f'remove-{table_name}', on_click=remove_entry, args=(engine, remove_button_idx, table_name), disabled=df_change.shape[0]!=0 and remove_button_idx is not None)
@@ -97,7 +98,7 @@ def render_table_default(engine, table_name: str):
         st.button("Сброс", key=f'reset-{table_name}', on_click=reset, disabled=df_change.shape[0]==0)
 
 
-TABLES = {"masters", "cars", "services"}
+TABLES = ["masters", "cars", "services", "works"]
 def render_tables():
     for table_name in TABLES:
         render_table_default(engine, table_name)

@@ -11,7 +11,7 @@ st.image(Image.open("app/pages/resources/car_service_banner.jpg"))
 st.markdown("---")
 is_authorized = login_if_not_authorized()
 if is_authorized:
-    st.markdown("Now you are able to choose pages from the left menu and use them. Try it!")
+    st.markdown("Используйте элементы меню слева (в сайдбаре) для обзора приложения")
 st.markdown("---")
 render_about()
 

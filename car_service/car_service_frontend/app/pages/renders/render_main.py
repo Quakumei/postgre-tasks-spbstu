@@ -12,7 +12,7 @@ def get_works_df(engine):
         return conn.execute(text(query))
 
 def get_registered_cars(engine):
-    query = "SELECT cars.id, cars.num, cars.color, cars.mark FROM cars"
+    query = "SELECT cars.id, cars.num, cars.color, cars.mark, cars.is_foreign FROM cars"
     with engine.connect() as conn:
         result = conn.execute(text(query))
     return result
@@ -43,7 +43,6 @@ def get_last_month_master_works(engine, master_id):
         result = conn.execute(text(query))
     return pd.DataFrame(result)
 
-
 def render_main():
     st.markdown(f"## Сегодня - {datetime.datetime.now().strftime('%Y-%m-%d')}")
     st.markdown("### Занятость мастеров сегодня")
@@ -64,6 +63,10 @@ def render_main():
         master = st.selectbox(label="Мастер", options=sorted(get_masters(engine), key=lambda x: x[1]), index=None, format_func=lambda x: f'{x[1]} (id {x[0]})', placeholder='Выберите мастера...')
         car = st.selectbox(label="Машина", options=get_registered_cars(engine), format_func=lambda x: f'{x[1]} - {x[2]} - {x[3]} (id {x[0]})', index=None, placeholder='Выберите машину...')
         service = st.selectbox(label="Услуга", options=sorted(get_registered_services(engine)), index=None, format_func=lambda x: f'{x[1]} - Отеч. {x[2]}р. - Зарубеж. {x[3]}р. (id {x[0]})', placeholder='Выберите услугу...') 
+        if car and service:
+            is_foreign_to_str = {True:'Импортная', False:'Отечественная'}
+            price = service[3] if car[4] else service[2]
+            st.markdown(f"Стоимость услуги: {price}р. ({is_foreign_to_str[car[4]]})")
         if master:
             master_id = master[0]
         if car:

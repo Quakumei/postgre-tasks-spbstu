@@ -11,12 +11,13 @@ from docx.shared import Inches
 def foreign_domestic_cars_service_cost(conn):
     st.markdown("## Общая стоимость обслуживания отечественных и импортных автомобилей")
     today = datetime.datetime.now()
-    month_ago = today - datetime.timedelta(days=364)
+    month_ago = today - datetime.timedelta(days=30)
     date = st.date_input("Выберите период обслуживания машин", 
                          (month_ago, today + datetime.timedelta(days=1)), max_value=today + datetime.timedelta(days=1),
                          format="YYYY-MM-DD")
     if date and len(date)==2:
-        total_service_cost_query = f"""SELECT
+        total_service_cost_query = f"""
+        SELECT
             cars.is_foreign,
             SUM(
                 CASE WHEN cars.is_foreign THEN
@@ -28,12 +29,15 @@ def foreign_domestic_cars_service_cost(conn):
             works
             LEFT JOIN cars ON works.car_id = cars.id
             LEFT JOIN services ON works.service_id = services.id
-            WHERE date_work >= '{date[0]}' AND date_work <= '{date[1]}'
+            WHERE date_work >= TO_DATE('{date[0]}','YYYY-MM-DD') 
+            AND date_work <= TO_DATE('{date[1]}', 'YYYY-MM-DD')
         GROUP BY
             cars.is_foreign
         ORDER BY
             service_cost DESC;
-        """  
+        """ 
+        with st.expander("SQL"):
+            st.code(total_service_cost_query, "sql")
         total_service_cost = conn.query(total_service_cost_query)
         c = alt.Chart(total_service_cost).mark_arc(outerRadius=80).encode(theta=alt.Theta("service_cost:Q").stack(True), color=alt.Color("is_foreign:N").legend(None))
         text = c.mark_text(radius=125, size=20).encode(text=alt.condition(alt.datum.is_foreign, alt.value("Импортные"), alt.value("Отечественные")))
@@ -50,11 +54,27 @@ def foreign_domestic_cars_service_cost(conn):
 
 
 def best_monthly_workers(conn):
+    st.markdown(f"## 5 Мастеров, выполнивших наибольшое кол-во работ за период")
     date = st.date_input("Выберите месяц работы мастеров", max_value=datetime.datetime.now(), format="YYYY-MM-DD")
     if date:
-        d = date.replace(day=1), (date.replace(day=1)+datetime.timedelta(days=30))
-        st.markdown(f"## 5 Мастеров, выполнивших наибольшое кол-во работ за {date.strftime('%Y-%m')}")
-        best_workers = conn.query(f"SELECT masters.id as master_id, masters.name as master_name, COUNT(1) as works_count FROM works LEFT JOIN masters ON works.master_id = masters.id WHERE works.date_work >= '{d[0]}' AND works.date_work <= '{d[1]}' GROUP BY masters.id ORDER BY COUNT(1) DESC LIMIT 5")
+        d = date.replace(day=1).strftime("%Y-%m-%d"), (date.replace(day=1)+ datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+        query = f"""
+        SELECT 
+            masters.id as master_id, 
+            masters.name as master_name, 
+            COUNT(1) as works_count 
+        FROM works 
+            LEFT JOIN masters ON works.master_id = masters.id 
+            WHERE works.date_work >= TO_DATE('{d[0]}','YYYY-MM-DD') 
+            AND works.date_work <= TO_DATE('{d[1]}', 'YYYY-MM-DD') 
+        GROUP BY masters.id 
+        ORDER BY 
+            COUNT(1) DESC 
+        LIMIT 5;"""
+        best_workers = conn.query(query)
+        best_workers = best_workers.set_index('master_id').sort_values(by=['works_count',], ascending=False)
+        with st.expander("SQL"):
+            st.code(query, "sql")
         c = alt.Chart(best_workers).encode(x=alt.X('works_count', title='Кол-во выполненных работ за период'), y=alt.Y('master_name', title=['Имя мастера']), text='works_count').properties(title=f"Топ 5 мастеров по кол-ву работ [{d[0]} - {d[1]}]")
         c = c.mark_bar() + c.mark_text(align='left', dx=2)
         st.altair_chart(c, use_container_width=True)
@@ -116,6 +136,7 @@ def create_report(service_cost_data, best_workers_data):
 def render_reports() -> None:
     conn = st.experimental_connection("car_service_db")
     service_cost_data = foreign_domestic_cars_service_cost(conn)
+    st.markdown("---")
     best_workers_data = best_monthly_workers(conn)
     if None not in (service_cost_data, best_workers_data):
         if st.button(label='Создать отчёт', key='download-report-btn'):
